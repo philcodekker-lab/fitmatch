@@ -1,0 +1,59 @@
+// Prisma schema for the PT Marketplace MVP.
+//
+// Postgres is the default — works on Vercel + any hosted Postgres
+// (Neon, Supabase, Railway, RDS, etc.). For purely-local development you
+// can either point DATABASE_URL at a local Postgres instance or temporarily
+// flip `provider` back to "sqlite" with a `file:./dev.db` URL.
+//
+// Enum-like fields (role, specialisms, training styles, experience levels)
+// are stored as strings with allowed values enforced in application code
+// (see src/lib/constants.js) so the schema stays portable across providers.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  role         String   // "PT" | "ADMIN"
+  createdAt    DateTime @default(now())
+
+  trainerProfile TrainerProfile?
+}
+
+model TrainerProfile {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name         String
+  bio          String   @default("")
+  caseStudies  String   @default("") // free-text for MVP
+  currentOffer String   @default("")
+
+  // Specialisms / preferences are stored as JSON-encoded string arrays so we
+  // can keep the schema flat on SQLite. Use the helpers in src/lib/profile.js
+  // to read/write these.
+  specialisms      String @default("[]") // e.g. ["fat_loss","strength"]
+  trainingStyles   String @default("[]") // ["online","in_person","hybrid"]
+  experienceLevels String @default("[]") // ["beginner","intermediate","advanced"]
+
+  // Pricing is per-session in GBP for the MVP.
+  priceMin     Int      @default(0)
+  priceMax     Int      @default(0)
+
+  location     String   @default("")    // free-text city for MVP
+
+  approved     Boolean  @default(false)
+  featured     Boolean  @default(false)
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
