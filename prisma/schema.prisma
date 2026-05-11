@@ -51,6 +51,14 @@ model TrainerProfile {
 
   location     String   @default("")    // free-text city for MVP
 
+  // --- Media + social fields (Feature pack v2) ---------------------------
+  photoUrl         String?  // Profile photo, hosted on Vercel Blob
+  socialInstagram  String   @default("") // handle, e.g. "fitwithlena"
+  socialTiktok     String   @default("") // handle, e.g. "fitwithlena"
+  socialFacebook   String   @default("") // full URL
+  socialWebsite    String   @default("") // full URL
+  caseStudyMedia   String   @default("[]") // JSON array of image URLs
+
   approved     Boolean  @default(false)
   featured     Boolean  @default(false)
 

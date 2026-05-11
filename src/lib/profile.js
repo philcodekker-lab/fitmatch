@@ -17,6 +17,7 @@ export function decodeProfile(profile) {
     specialisms: parseList(profile.specialisms),
     trainingStyles: parseList(profile.trainingStyles),
     experienceLevels: parseList(profile.experienceLevels),
+    caseStudyMedia: parseList(profile.caseStudyMedia),
   };
 }
 
@@ -26,5 +27,7 @@ export function encodeListFields(input) {
   if (Array.isArray(input.trainingStyles)) out.trainingStyles = JSON.stringify(input.trainingStyles);
   if (Array.isArray(input.experienceLevels))
     out.experienceLevels = JSON.stringify(input.experienceLevels);
+  if (Array.isArray(input.caseStudyMedia))
+    out.caseStudyMedia = JSON.stringify(input.caseStudyMedia);
   return out;
 }

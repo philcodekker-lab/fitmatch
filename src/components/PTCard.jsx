@@ -12,8 +12,13 @@ export default function PTCard({ trainer, reasons }) {
   return (
     <article className="card p-5 sm:p-6 flex flex-col gap-4">
       <div className="flex items-start gap-4">
-        <div className="w-14 h-14 rounded-full bg-brand-100 text-brand-700 grid place-items-center font-semibold text-lg shrink-0">
-          {initials}
+        <div className="w-14 h-14 rounded-full bg-brand-100 text-brand-700 grid place-items-center font-semibold text-lg shrink-0 overflow-hidden">
+          {trainer.photoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={trainer.photoUrl} alt="" className="w-full h-full object-cover" />
+          ) : (
+            <span>{initials}</span>
+          )}
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">

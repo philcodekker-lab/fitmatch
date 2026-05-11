@@ -9,6 +9,24 @@ import {
   EXPERIENCE_LEVELS,
 } from '@/lib/constants';
 
+async function uploadFile(file) {
+  const fd = new FormData();
+  fd.append('file', file);
+  const res = await fetch('/api/upload', { method: 'POST', body: fd });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Upload failed');
+  return data.url;
+}
+
+function initialsOf(name) {
+  return (name || '?')
+    .split(' ')
+    .map((n) => n[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+}
+
 function MultiSelect({ value, onChange, options, getLabel }) {
   function toggle(id) {
     if (value.includes(id)) onChange(value.filter((v) => v !== id));
@@ -40,6 +58,170 @@ function MultiSelect({ value, onChange, options, getLabel }) {
   );
 }
 
+function PhotoUploader({ value, onChange, name }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  async function handleFile(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setBusy(true);
+    setError('');
+    try {
+      const url = await uploadFile(file);
+      onChange(url);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+      e.target.value = '';
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-4">
+      <div className="w-20 h-20 rounded-full overflow-hidden bg-brand-100 text-brand-700 grid place-items-center font-semibold text-xl shrink-0">
+        {value ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={value} alt="" className="w-full h-full object-cover" />
+        ) : (
+          <span>{initialsOf(name)}</span>
+        )}
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <div className="flex items-center gap-2">
+          <label className="btn-secondary text-sm cursor-pointer">
+            {busy ? 'Uploading…' : value ? 'Change photo' : 'Upload photo'}
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              className="hidden"
+              onChange={handleFile}
+              disabled={busy}
+            />
+          </label>
+          {value && !busy && (
+            <button
+              type="button"
+              onClick={() => onChange('')}
+              className="text-sm text-red-700 hover:text-red-900"
+            >
+              Remove
+            </button>
+          )}
+        </div>
+        {error && <p className="text-xs text-red-600">{error}</p>}
+        <p className="text-xs text-slate-500">JPEG / PNG / WebP / GIF · max 5MB.</p>
+      </div>
+    </div>
+  );
+}
+
+function GalleryUploader({ value, onChange }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  async function handleFiles(e) {
+    const files = Array.from(e.target.files ?? []);
+    if (files.length === 0) return;
+    setBusy(true);
+    setError('');
+    const next = [...value];
+    for (const file of files) {
+      if (next.length >= 10) {
+        setError('Maximum 10 case-study photos.');
+        break;
+      }
+      try {
+        const url = await uploadFile(file);
+        next.push(url);
+      } catch (err) {
+        setError(err.message);
+        break;
+      }
+    }
+    onChange(next);
+    setBusy(false);
+    e.target.value = '';
+  }
+
+  function remove(i) {
+    onChange(value.filter((_, idx) => idx !== i));
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+        {value.map((url, i) => (
+          <div
+            key={url + i}
+            className="relative aspect-square rounded-lg overflow-hidden bg-slate-100 group"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={url} alt="" className="w-full h-full object-cover" />
+            <button
+              type="button"
+              onClick={() => remove(i)}
+              className="absolute top-1 right-1 bg-white/90 hover:bg-white text-slate-900 rounded-full w-6 h-6 grid place-items-center text-xs shadow"
+              aria-label="Remove photo"
+              title="Remove"
+            >
+              ✕
+            </button>
+          </div>
+        ))}
+        {value.length < 10 && (
+          <label className="aspect-square rounded-lg border-2 border-dashed border-slate-300 grid place-items-center cursor-pointer hover:border-slate-400 text-slate-500 text-xs text-center px-2">
+            {busy ? 'Uploading…' : '+ Add image'}
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              multiple
+              className="hidden"
+              onChange={handleFiles}
+              disabled={busy}
+            />
+          </label>
+        )}
+      </div>
+      {error && <p className="text-xs text-red-600">{error}</p>}
+      <p className="text-xs text-slate-500">
+        Up to 10 photos · JPEG / PNG / WebP / GIF · max 5MB each.
+      </p>
+    </div>
+  );
+}
+
+function SocialField({ label, prefix, value, onChange, placeholder, type = 'text' }) {
+  return (
+    <div>
+      <label className="label">{label}</label>
+      {prefix ? (
+        <div className="flex items-stretch rounded-lg border border-slate-300 bg-white shadow-sm focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-200 overflow-hidden">
+          <span className="pl-3 pr-1 self-center text-slate-500 text-sm whitespace-nowrap">
+            {prefix}
+          </span>
+          <input
+            type={type}
+            className="flex-1 px-2 py-2 bg-transparent focus:outline-none text-slate-900 min-w-0"
+            placeholder={placeholder}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+          />
+        </div>
+      ) : (
+        <input
+          type={type}
+          className="input"
+          placeholder={placeholder}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+        />
+      )}
+    </div>
+  );
+}
+
 export default function ProfileEditor({ initial }) {
   const router = useRouter();
   const [form, setForm] = useState({
@@ -53,6 +235,12 @@ export default function ProfileEditor({ initial }) {
     priceMin: initial.priceMin ?? 0,
     priceMax: initial.priceMax ?? 0,
     location: initial.location ?? '',
+    photoUrl: initial.photoUrl ?? '',
+    socialInstagram: initial.socialInstagram ?? '',
+    socialTiktok: initial.socialTiktok ?? '',
+    socialFacebook: initial.socialFacebook ?? '',
+    socialWebsite: initial.socialWebsite ?? '',
+    caseStudyMedia: initial.caseStudyMedia ?? [],
   });
   const [status, setStatus] = useState({ kind: 'idle', message: '' });
 
@@ -85,7 +273,11 @@ export default function ProfileEditor({ initial }) {
 
   return (
     <form onSubmit={save} className="space-y-6">
-      <div className="card p-6 grid gap-4">
+      <div className="card p-6 grid gap-5">
+        <div>
+          <label className="label">Profile photo</label>
+          <PhotoUploader value={form.photoUrl} onChange={set('photoUrl')} name={form.name} />
+        </div>
         <div>
           <label className="label">Display name</label>
           <input
@@ -113,6 +305,10 @@ export default function ProfileEditor({ initial }) {
             value={form.caseStudies}
             onChange={(e) => set('caseStudies')(e.target.value)}
           />
+        </div>
+        <div>
+          <label className="label">Case-study photos</label>
+          <GalleryUploader value={form.caseStudyMedia} onChange={set('caseStudyMedia')} />
         </div>
         <div>
           <label className="label">Current offer</label>
@@ -150,6 +346,43 @@ export default function ProfileEditor({ initial }) {
             value={form.experienceLevels}
             onChange={set('experienceLevels')}
             options={EXPERIENCE_LEVELS}
+          />
+        </div>
+      </div>
+
+      <div className="card p-6 grid gap-4">
+        <h3 className="font-semibold text-slate-900">Social links</h3>
+        <p className="text-sm text-slate-500 -mt-2">
+          Optional — only fill in what you actually want to share.
+        </p>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <SocialField
+            label="Instagram"
+            prefix="instagram.com/"
+            placeholder="yourhandle"
+            value={form.socialInstagram}
+            onChange={set('socialInstagram')}
+          />
+          <SocialField
+            label="TikTok"
+            prefix="tiktok.com/@"
+            placeholder="yourhandle"
+            value={form.socialTiktok}
+            onChange={set('socialTiktok')}
+          />
+          <SocialField
+            label="Facebook"
+            placeholder="https://facebook.com/your-page"
+            value={form.socialFacebook}
+            onChange={set('socialFacebook')}
+            type="url"
+          />
+          <SocialField
+            label="Personal website"
+            placeholder="https://your-site.com"
+            value={form.socialWebsite}
+            onChange={set('socialWebsite')}
+            type="url"
           />
         </div>
       </div>
@@ -193,7 +426,9 @@ export default function ProfileEditor({ initial }) {
         </button>
         <div className="flex items-center gap-3">
           {status.kind === 'saved' && <span className="text-sm text-emerald-600">Saved ✓</span>}
-          {status.kind === 'error' && <span className="text-sm text-red-600">{status.message}</span>}
+          {status.kind === 'error' && (
+            <span className="text-sm text-red-600">{status.message}</span>
+          )}
           <button type="submit" className="btn-primary" disabled={status.kind === 'saving'}>
             {status.kind === 'saving' ? 'Saving…' : 'Save profile'}
           </button>
