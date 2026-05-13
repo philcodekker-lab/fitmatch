@@ -8,10 +8,22 @@ export default async function Navbar() {
     <header className="border-b border-slate-200 bg-white/80 backdrop-blur sticky top-0 z-30">
       <nav className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 font-semibold text-slate-900">
-          <span className="inline-block w-7 h-7 rounded-lg bg-brand-600 text-white grid place-items-center text-sm">
-            FM
+          <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-brand-600 text-white">
+            <svg
+              className="w-4 h-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="11" cy="11" r="7" />
+              <path d="m21 21-4.3-4.3" />
+            </svg>
           </span>
-          <span>FitMatch</span>
+          <span>FindMyPT</span>
         </Link>
         <div className="flex items-center gap-1 sm:gap-3">
           <Link

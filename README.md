@@ -1,4 +1,4 @@
-# FitMatch — PT marketplace MVP
+# FindMyPT — PT marketplace MVP
 
 A small Next.js marketplace that matches users with personal trainers based on a
 short quiz (goal, experience, training style, budget, location). Built as an MVP

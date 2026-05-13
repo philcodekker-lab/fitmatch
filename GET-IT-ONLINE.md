@@ -1,4 +1,4 @@
-# Get FitMatch online — beginner guide
+# Get FindMyPT online — beginner guide
 
 > **What you'll end up with:** a real website at a `*.vercel.app` URL (or your
 > own domain) that you can share with anyone.
@@ -72,7 +72,7 @@ If you don't already have an account:
 
 ### 2.2 — Move the project to a stable place
 
-Right now the FitMatch files are in a temporary Claude folder, which can change between sessions. Let's copy them somewhere more permanent.
+Right now the FindMyPT files are in a temporary Claude folder, which can change between sessions. Let's copy them somewhere more permanent.
 
 1. Open the **Finder**.
 2. From the menu bar: **Go → Go to Folder…** (or press ⌘+Shift+G).

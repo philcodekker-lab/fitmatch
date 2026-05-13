@@ -200,7 +200,7 @@ const TRAINERS = [
   {
     email: 'pending-pt@fitmatch.dev',
     name: 'Sam Pending (awaiting approval)',
-    bio: 'New trainer, recently signed up. Profile is still being reviewed by the FitMatch team.',
+    bio: 'New trainer, recently signed up. Profile is still being reviewed by the FindMyPT team.',
     caseStudies: '',
     currentOffer: '',
     specialisms: ['general_fitness'],

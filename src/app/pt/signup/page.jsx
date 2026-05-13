@@ -33,7 +33,7 @@ export default function PTSignupPage() {
 
   return (
     <div className="max-w-md mx-auto px-4 sm:px-6 py-12">
-      <h1 className="text-3xl font-semibold text-slate-900">Join FitMatch as a PT</h1>
+      <h1 className="text-3xl font-semibold text-slate-900">Join FindMyPT as a PT</h1>
       <p className="text-slate-600 mt-1">
         Create your account — you'll fill in your full profile next. New profiles are reviewed
         by our team before going live.

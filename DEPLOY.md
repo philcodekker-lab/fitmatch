@@ -1,4 +1,4 @@
-# Deploying FitMatch to Vercel + Postgres
+# Deploying FindMyPT to Vercel + Postgres
 
 This is the recommended path: a free Postgres database on Neon and a free
 Vercel deployment. End-to-end, ~10 minutes. You'll get a public URL like

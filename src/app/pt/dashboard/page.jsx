@@ -35,7 +35,7 @@ export default async function PTDashboardPage() {
 
       {!profile.approved && (
         <div className="card p-4 bg-amber-50 border-amber-200 text-amber-900 text-sm mb-6">
-          Your profile is pending review by the FitMatch team. You can keep editing — once
+          Your profile is pending review by the FindMyPT team. You can keep editing — once
           approved it will start appearing in match results.
         </div>
       )}

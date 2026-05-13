@@ -83,9 +83,9 @@ export default async function TrainerProfilePage({ params }) {
     return ids.map((id) => list.find((x) => x.id === id)?.label ?? id).join(', ');
   }
 
-  const subject = encodeURIComponent(`PT enquiry from FitMatch — ${t.name}`);
+  const subject = encodeURIComponent(`PT enquiry from FindMyPT — ${t.name}`);
   const body = encodeURIComponent(
-    `Hi ${t.name.split(' ')[0]},\n\nI found you on FitMatch and would love to chat about training.\n\nThanks!`,
+    `Hi ${t.name.split(' ')[0]},\n\nI found you on FindMyPT and would love to chat about training.\n\nThanks!`,
   );
   const mailto = `mailto:${profile.user.email}?subject=${subject}&body=${body}`;
 
