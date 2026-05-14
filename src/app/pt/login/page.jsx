@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Mono from '@/components/Mono';
 
 export default function PTLoginPage() {
   const router = useRouter();
@@ -32,11 +33,14 @@ export default function PTLoginPage() {
   }
 
   return (
-    <div className="max-w-md mx-auto px-4 sm:px-6 py-12">
-      <h1 className="text-3xl font-semibold text-slate-900">PT login</h1>
-      <p className="text-slate-600 mt-1">Sign in to manage your profile.</p>
+    <div className="max-w-md mx-auto px-4 sm:px-6 py-12 sm:py-20">
+      <Mono rule>For trainers</Mono>
+      <h1 className="font-display text-4xl sm:text-5xl tracking-tight mt-4 text-ink-900">
+        Welcome back.
+      </h1>
+      <p className="text-ink-700 mt-2">Sign in to manage your profile.</p>
 
-      <form onSubmit={onSubmit} className="card p-6 mt-6 space-y-4">
+      <form onSubmit={onSubmit} className="card p-6 sm:p-8 mt-8 space-y-4">
         <div>
           <label className="label">Email</label>
           <input
@@ -57,16 +61,16 @@ export default function PTLoginPage() {
             required
           />
         </div>
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="text-sm text-warn">{error}</p>}
         <button type="submit" className="btn-primary w-full" disabled={submitting}>
           {submitting ? 'Signing in…' : 'Sign in'}
         </button>
       </form>
 
-      <p className="text-sm text-slate-600 mt-4 text-center">
+      <p className="text-sm text-ink-700 mt-5 text-center">
         New here?{' '}
-        <Link href="/pt/signup" className="text-brand-700 hover:underline">
-          Create a PT account
+        <Link href="/pt/signup" className="text-brand-600 hover:underline">
+          Create a trainer account
         </Link>
       </p>
     </div>

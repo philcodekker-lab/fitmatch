@@ -28,7 +28,6 @@ export default function AdminTrainerRow({ trainer }) {
     const res = await fetch(`/api/admin/pts/${trainer.id}`, { method: 'DELETE' });
     if (!res.ok) {
       setError('Could not remove trainer.');
-      return;
     }
   }
 
@@ -43,27 +42,27 @@ export default function AdminTrainerRow({ trainer }) {
     <div className="card p-4 sm:p-5 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
       <div className="min-w-0">
         <div className="flex items-center flex-wrap gap-2">
-          <h3 className="font-semibold text-slate-900">{trainer.name}</h3>
+          <h3 className="font-display text-lg font-semibold text-ink-900">{trainer.name}</h3>
           {trainer.approved ? (
-            <span className="pill bg-emerald-100 text-emerald-800">Approved</span>
+            <span className="pill-lime">● Approved</span>
           ) : (
-            <span className="pill bg-amber-100 text-amber-800">Pending</span>
+            <span className="pill-muted">Pending</span>
           )}
-          {trainer.featured && <span className="pill bg-brand-100 text-brand-800">Featured</span>}
+          {trainer.featured && <span className="pill-dark">Featured</span>}
         </div>
-        <p className="text-sm text-slate-500 mt-0.5">
+        <p className="text-sm text-ink-500 mt-0.5">
           {trainer.email} · {trainer.location || '—'} · £{trainer.priceMin}–£{trainer.priceMax}
         </p>
         {trainer.specialisms?.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mt-2">
             {trainer.specialisms.map((s) => (
-              <span key={s} className="pill bg-slate-100 text-slate-700">
+              <span key={s} className="pill-outline">
                 {SPECIALISM_LABELS[s] ?? s}
               </span>
             ))}
           </div>
         )}
-        {error && <p className="text-xs text-red-600 mt-2">{error}</p>}
+        {error && <p className="text-xs text-warn mt-2">{error}</p>}
       </div>
 
       <div className="flex flex-wrap items-center gap-2 shrink-0">
@@ -92,7 +91,7 @@ export default function AdminTrainerRow({ trainer }) {
           type="button"
           disabled={pending}
           onClick={() => run(remove)}
-          className="btn text-sm text-red-700 hover:bg-red-50 border border-red-200"
+          className="btn text-sm text-warn border border-warn/30 px-4 py-2 hover:bg-warn/5"
         >
           Remove
         </button>

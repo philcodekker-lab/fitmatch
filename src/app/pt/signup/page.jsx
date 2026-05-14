@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Mono from '@/components/Mono';
 
 export default function PTSignupPage() {
   const router = useRouter();
@@ -32,14 +33,17 @@ export default function PTSignupPage() {
   }
 
   return (
-    <div className="max-w-md mx-auto px-4 sm:px-6 py-12">
-      <h1 className="text-3xl font-semibold text-slate-900">Join FindMyPT as a PT</h1>
-      <p className="text-slate-600 mt-1">
-        Create your account — you'll fill in your full profile next. New profiles are reviewed
-        by our team before going live.
+    <div className="max-w-md mx-auto px-4 sm:px-6 py-12 sm:py-20">
+      <Mono rule>For trainers</Mono>
+      <h1 className="font-display text-4xl sm:text-5xl tracking-tight mt-4 text-ink-900">
+        List your profile.
+      </h1>
+      <p className="text-ink-700 mt-2">
+        Create your account — you&apos;ll fill in your full profile next. New profiles are
+        reviewed by our team before going live.
       </p>
 
-      <form onSubmit={onSubmit} className="card p-6 mt-6 space-y-4">
+      <form onSubmit={onSubmit} className="card p-6 sm:p-8 mt-8 space-y-4">
         <div>
           <label className="label">Your name</label>
           <input
@@ -71,17 +75,17 @@ export default function PTSignupPage() {
             required
             minLength={8}
           />
-          <p className="text-xs text-slate-500 mt-1">At least 8 characters.</p>
+          <p className="text-xs text-ink-500 mt-1">At least 8 characters.</p>
         </div>
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="text-sm text-warn">{error}</p>}
         <button type="submit" className="btn-primary w-full" disabled={submitting}>
           {submitting ? 'Creating account…' : 'Create account'}
         </button>
       </form>
 
-      <p className="text-sm text-slate-600 mt-4 text-center">
+      <p className="text-sm text-ink-700 mt-5 text-center">
         Already registered?{' '}
-        <Link href="/pt/login" className="text-brand-700 hover:underline">
+        <Link href="/pt/login" className="text-brand-600 hover:underline">
           Sign in
         </Link>
       </p>

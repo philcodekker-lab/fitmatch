@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Mono from '@/components/Mono';
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -35,14 +36,17 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="max-w-md mx-auto px-4 sm:px-6 py-12">
-      <h1 className="text-3xl font-semibold text-slate-900">Admin login</h1>
-      <p className="text-slate-600 mt-1 text-sm">
-        Demo credentials: <code className="bg-slate-100 px-1 rounded">admin@fitmatch.dev</code> /{' '}
-        <code className="bg-slate-100 px-1 rounded">admin123</code>
+    <div className="max-w-md mx-auto px-4 sm:px-6 py-12 sm:py-20">
+      <Mono rule>Internal</Mono>
+      <h1 className="font-display text-4xl sm:text-5xl tracking-tight mt-4 text-ink-900">
+        Admin login.
+      </h1>
+      <p className="text-ink-500 mt-2 text-sm">
+        Demo credentials: <code className="font-mono bg-line2 px-1.5 py-0.5 rounded">admin@fitmatch.dev</code>{' '}
+        / <code className="font-mono bg-line2 px-1.5 py-0.5 rounded">admin123</code>
       </p>
 
-      <form onSubmit={onSubmit} className="card p-6 mt-6 space-y-4">
+      <form onSubmit={onSubmit} className="card p-6 sm:p-8 mt-8 space-y-4">
         <div>
           <label className="label">Email</label>
           <input
@@ -63,7 +67,7 @@ export default function AdminLoginPage() {
             required
           />
         </div>
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="text-sm text-warn">{error}</p>}
         <button type="submit" className="btn-primary w-full" disabled={submitting}>
           {submitting ? 'Signing in…' : 'Sign in'}
         </button>

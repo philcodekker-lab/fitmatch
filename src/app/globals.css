@@ -2,40 +2,55 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: 248 250 252;
-  --foreground: 17 24 39;
-}
-
-html, body {
-  background: rgb(var(--background));
-  color: rgb(var(--foreground));
+html,
+body {
+  background: theme('colors.bg');
+  color: theme('colors.ink.900');
   -webkit-font-smoothing: antialiased;
 }
 
 @layer components {
+  /* Buttons — pill-shaped */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition focus:outline-none focus:ring-2 focus:ring-offset-2;
+    @apply inline-flex items-center justify-center gap-2 rounded-full font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-ink-900/20;
   }
   .btn-primary {
-    @apply btn bg-brand-600 text-white hover:bg-brand-700 focus:ring-brand-500 disabled:bg-brand-300 disabled:cursor-not-allowed;
+    @apply btn bg-ink-900 text-white px-5 py-3 hover:bg-brand-700 disabled:opacity-60 disabled:cursor-not-allowed;
+  }
+  .btn-accent {
+    @apply btn bg-lime text-brand-900 px-6 py-3.5 hover:bg-lime-dark;
   }
   .btn-secondary {
-    @apply btn bg-white text-slate-800 border border-slate-200 hover:bg-slate-50 focus:ring-slate-300;
+    @apply btn bg-surface text-ink-900 border border-line px-5 py-3 hover:bg-surface2 hover:border-ink-300;
   }
   .btn-ghost {
-    @apply btn text-slate-700 hover:bg-slate-100;
+    @apply btn text-ink-700 px-4 py-2.5 hover:bg-ink-900/5 hover:text-ink-900;
   }
+
+  /* Pills */
+  .pill {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium;
+  }
+  .pill-muted   { @apply pill bg-line2 text-ink-700; }
+  .pill-brand   { @apply pill bg-brand-50 text-brand-700 border border-brand-100; }
+  .pill-lime    { @apply pill bg-lime text-brand-900; }
+  .pill-dark    { @apply pill bg-ink-900 text-white; }
+  .pill-outline { @apply pill border border-line text-ink-700; }
+
+  /* Cards */
+  .card      { @apply bg-surface border border-line rounded-card; }
+  .card-flat { @apply bg-surface2 border border-line2 rounded-card; }
+
+  /* Inputs */
   .input {
-    @apply block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200;
+    @apply block w-full px-3.5 py-3 rounded-xl border border-line bg-surface text-ink-900 placeholder:text-ink-400 focus:outline-none focus:border-ink-700 focus:ring-2 focus:ring-ink-900/10;
   }
   .label {
-    @apply block text-sm font-medium text-slate-700 mb-1;
+    @apply block text-sm font-medium text-ink-700 mb-1.5;
   }
-  .card {
-    @apply bg-white rounded-2xl border border-slate-200 shadow-sm;
-  }
-  .pill {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+
+  /* Mono small-caps meta label */
+  .mono-meta {
+    @apply font-mono text-[11px] uppercase tracking-[0.08em] text-ink-500;
   }
 }

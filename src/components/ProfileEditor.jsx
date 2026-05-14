@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Mono from './Mono';
 import {
   SPECIALISM_OPTIONS,
   SPECIALISM_LABELS,
@@ -43,12 +44,7 @@ function MultiSelect({ value, onChange, options, getLabel }) {
             type="button"
             key={id}
             onClick={() => toggle(id)}
-            className={
-              'pill border ' +
-              (selected
-                ? 'bg-brand-600 text-white border-brand-600'
-                : 'bg-white text-slate-700 border-slate-300 hover:border-slate-400')
-            }
+            className={selected ? 'pill-dark' : 'pill-outline hover:border-ink-300'}
           >
             {label}
           </button>
@@ -80,7 +76,7 @@ function PhotoUploader({ value, onChange, name }) {
 
   return (
     <div className="flex items-center gap-4">
-      <div className="w-20 h-20 rounded-full overflow-hidden bg-brand-100 text-brand-700 grid place-items-center font-semibold text-xl shrink-0">
+      <div className="w-20 h-20 rounded-full overflow-hidden bg-brand-50 text-brand-700 grid place-items-center font-display font-semibold text-xl shrink-0">
         {value ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={value} alt="" className="w-full h-full object-cover" />
@@ -104,14 +100,14 @@ function PhotoUploader({ value, onChange, name }) {
             <button
               type="button"
               onClick={() => onChange('')}
-              className="text-sm text-red-700 hover:text-red-900"
+              className="text-sm text-warn hover:underline"
             >
               Remove
             </button>
           )}
         </div>
-        {error && <p className="text-xs text-red-600">{error}</p>}
-        <p className="text-xs text-slate-500">JPEG / PNG / WebP / GIF · max 5MB.</p>
+        {error && <p className="text-xs text-warn">{error}</p>}
+        <p className="text-xs text-ink-500">JPEG / PNG / WebP / GIF · max 5MB.</p>
       </div>
     </div>
   );
@@ -155,23 +151,22 @@ function GalleryUploader({ value, onChange }) {
         {value.map((url, i) => (
           <div
             key={url + i}
-            className="relative aspect-square rounded-lg overflow-hidden bg-slate-100 group"
+            className="relative aspect-square rounded-xl overflow-hidden bg-surface2 group"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={url} alt="" className="w-full h-full object-cover" />
             <button
               type="button"
               onClick={() => remove(i)}
-              className="absolute top-1 right-1 bg-white/90 hover:bg-white text-slate-900 rounded-full w-6 h-6 grid place-items-center text-xs shadow"
+              className="absolute top-1 right-1 bg-surface/95 hover:bg-surface text-ink-900 rounded-full w-6 h-6 grid place-items-center text-xs shadow"
               aria-label="Remove photo"
-              title="Remove"
             >
               ✕
             </button>
           </div>
         ))}
         {value.length < 10 && (
-          <label className="aspect-square rounded-lg border-2 border-dashed border-slate-300 grid place-items-center cursor-pointer hover:border-slate-400 text-slate-500 text-xs text-center px-2">
+          <label className="aspect-square rounded-xl border-2 border-dashed border-line grid place-items-center cursor-pointer hover:border-ink-300 text-ink-500 text-xs text-center px-2">
             {busy ? 'Uploading…' : '+ Add image'}
             <input
               type="file"
@@ -184,8 +179,8 @@ function GalleryUploader({ value, onChange }) {
           </label>
         )}
       </div>
-      {error && <p className="text-xs text-red-600">{error}</p>}
-      <p className="text-xs text-slate-500">
+      {error && <p className="text-xs text-warn">{error}</p>}
+      <p className="text-xs text-ink-500">
         Up to 10 photos · JPEG / PNG / WebP / GIF · max 5MB each.
       </p>
     </div>
@@ -197,13 +192,13 @@ function SocialField({ label, prefix, value, onChange, placeholder, type = 'text
     <div>
       <label className="label">{label}</label>
       {prefix ? (
-        <div className="flex items-stretch rounded-lg border border-slate-300 bg-white shadow-sm focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-200 overflow-hidden">
-          <span className="pl-3 pr-1 self-center text-slate-500 text-sm whitespace-nowrap">
+        <div className="flex items-stretch rounded-xl border border-line bg-surface focus-within:border-ink-700 focus-within:ring-2 focus-within:ring-ink-900/10 overflow-hidden">
+          <span className="pl-3 pr-1 self-center text-ink-500 text-sm whitespace-nowrap">
             {prefix}
           </span>
           <input
             type={type}
-            className="flex-1 px-2 py-2 bg-transparent focus:outline-none text-slate-900 min-w-0"
+            className="flex-1 px-2 py-3 bg-transparent focus:outline-none text-ink-900 min-w-0"
             placeholder={placeholder}
             value={value}
             onChange={(e) => onChange(e.target.value)}
@@ -273,7 +268,8 @@ export default function ProfileEditor({ initial }) {
 
   return (
     <form onSubmit={save} className="space-y-6">
-      <div className="card p-6 grid gap-5">
+      <div className="card p-6 sm:p-8 grid gap-6">
+        <Mono>Identity</Mono>
         <div>
           <label className="label">Profile photo</label>
           <PhotoUploader value={form.photoUrl} onChange={set('photoUrl')} name={form.name} />
@@ -322,7 +318,8 @@ export default function ProfileEditor({ initial }) {
         </div>
       </div>
 
-      <div className="card p-6 grid gap-4">
+      <div className="card p-6 sm:p-8 grid gap-5">
+        <Mono>What you do</Mono>
         <div>
           <label className="label">Specialisms</label>
           <MultiSelect
@@ -350,9 +347,9 @@ export default function ProfileEditor({ initial }) {
         </div>
       </div>
 
-      <div className="card p-6 grid gap-4">
-        <h3 className="font-semibold text-slate-900">Social links</h3>
-        <p className="text-sm text-slate-500 -mt-2">
+      <div className="card p-6 sm:p-8 grid gap-5">
+        <Mono>Social links</Mono>
+        <p className="text-sm text-ink-500 -mt-3">
           Optional — only fill in what you actually want to share.
         </p>
         <div className="grid sm:grid-cols-2 gap-4">
@@ -387,7 +384,8 @@ export default function ProfileEditor({ initial }) {
         </div>
       </div>
 
-      <div className="card p-6 grid sm:grid-cols-3 gap-4">
+      <div className="card p-6 sm:p-8 grid sm:grid-cols-3 gap-4">
+        <div className="sm:col-span-3"><Mono>Pricing &amp; location</Mono></div>
         <div>
           <label className="label">Price min (£/session)</label>
           <input
@@ -425,9 +423,9 @@ export default function ProfileEditor({ initial }) {
           Sign out
         </button>
         <div className="flex items-center gap-3">
-          {status.kind === 'saved' && <span className="text-sm text-emerald-600">Saved ✓</span>}
+          {status.kind === 'saved' && <span className="mono-meta text-brand-600">Saved ✓</span>}
           {status.kind === 'error' && (
-            <span className="text-sm text-red-600">{status.message}</span>
+            <span className="text-sm text-warn">{status.message}</span>
           )}
           <button type="submit" className="btn-primary" disabled={status.kind === 'saving'}>
             {status.kind === 'saving' ? 'Saving…' : 'Save profile'}
