@@ -1,25 +1,20 @@
 import './globals.css';
-import { Bricolage_Grotesque, Geist, Geist_Mono } from 'next/font/google';
+import { Bricolage_Grotesque } from 'next/font/google';
+import { GeistSans } from 'geist/font/sans';
+import { GeistMono } from 'geist/font/mono';
 import Navbar from '@/components/Navbar';
 
 // Every page reads cookies via Navbar/getCurrentUser, so nothing is safely
 // static. Forcing dynamic rendering avoids accidental build-time DB calls.
 export const dynamic = 'force-dynamic';
 
+// Geist + Geist Mono come from Vercel's dedicated `geist` npm package
+// (next/font/google doesn't include Geist in Next 14.2.x). The variables
+// they expose are --font-geist-sans and --font-geist-mono.
 const display = Bricolage_Grotesque({
   subsets: ['latin'],
   variable: '--font-display',
   weight: ['400', '500', '600', '700'],
-  display: 'swap',
-});
-const sans = Geist({
-  subsets: ['latin'],
-  variable: '--font-sans',
-  display: 'swap',
-});
-const mono = Geist_Mono({
-  subsets: ['latin'],
-  variable: '--font-mono',
   display: 'swap',
 });
 
@@ -31,7 +26,10 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${display.variable} ${sans.variable} ${mono.variable}`}>
+    <html
+      lang="en"
+      className={`${display.variable} ${GeistSans.variable} ${GeistMono.variable}`}
+    >
       <body className="min-h-screen flex flex-col font-sans bg-bg text-ink-900">
         <Navbar />
         <main className="flex-1">{children}</main>

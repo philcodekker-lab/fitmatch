@@ -29,9 +29,11 @@ module.exports = {
         warn: '#C0664A',
       },
       fontFamily: {
-        display: ['var(--font-display)', 'Geist', 'system-ui', 'sans-serif'],
-        sans: ['var(--font-sans)', 'system-ui', '-apple-system', 'sans-serif'],
-        mono: ['var(--font-mono)', 'ui-monospace', 'Menlo', 'monospace'],
+        // --font-display from Bricolage Grotesque (next/font/google)
+        // --font-geist-sans + --font-geist-mono from the `geist` npm package
+        display: ['var(--font-display)', 'var(--font-geist-sans)', 'system-ui', 'sans-serif'],
+        sans: ['var(--font-geist-sans)', 'system-ui', '-apple-system', 'sans-serif'],
+        mono: ['var(--font-geist-mono)', 'ui-monospace', 'Menlo', 'monospace'],
       },
       borderRadius: {
         card: '22px',
