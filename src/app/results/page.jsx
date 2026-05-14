@@ -76,14 +76,14 @@ function FilterChip({ def, value, onChange }) {
 
 function ranksWith(reasons, score) {
   // Synthesise a weighted breakdown for the hero card: split the score across
-  // the reasons in decreasing chunks. Falls back to the raw reasons.
+  // the reasons in decreasing chunks.
   if (!reasons || reasons.length === 0) return [];
   const total = Math.max(20, Math.min(100, score));
   const weights = [Math.round(total * 0.45), Math.round(total * 0.32), Math.round(total * 0.23)];
   return reasons.slice(0, 3).map((r, i) => ({ text: r, weight: weights[i] || 8 }));
 }
 
-function HeroMatch({ trainer, quiz }) {
+function HeroMatch({ trainer }) {
   if (!trainer) return null;
   const breakdown = ranksWith(trainer.reasons, trainer.score);
   const firstName = trainer.name.split(' ')[0];
@@ -93,6 +93,7 @@ function HeroMatch({ trainer, quiz }) {
     .slice(0, 2)
     .join('')
     .toUpperCase();
+
   return (
     <article className="card overflow-hidden grid md:grid-cols-[420px_1fr]">
       <div className="aspect-[4/5] md:aspect-auto md:h-full bg-surface2 relative">
@@ -181,6 +182,8 @@ export default function ResultsPage() {
   const [loading, setLoading] = useState(true);
   const [matches, setMatches] = useState([]);
   const [error, setError] = useState('');
+  const [showMore, setShowMore] = useState(false);
+
   const today = new Date().toLocaleDateString('en-GB', {
     day: '2-digit',
     month: 'short',
@@ -190,6 +193,7 @@ export default function ResultsPage() {
   async function runMatch(q) {
     setLoading(true);
     setError('');
+    setShowMore(false);
     try {
       const res = await fetch('/api/match', {
         method: 'POST',
@@ -227,7 +231,8 @@ export default function ResultsPage() {
   }
 
   const top = matches[0];
-  const rest = matches.slice(1, 3);
+  const highlighted = matches.slice(1, 3); // #2 and #3
+  const additional = matches.slice(3); // #4 onwards (up to 10)
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-14 pb-32">
@@ -294,14 +299,46 @@ export default function ResultsPage() {
       {!loading && !error && top && (
         <>
           <div className="mt-10">
-            <HeroMatch trainer={top} quiz={quiz} />
+            <HeroMatch trainer={top} />
           </div>
 
-          {rest.length > 0 && (
+          {highlighted.length > 0 && (
             <div className="mt-6 grid md:grid-cols-2 gap-5">
-              {rest.map((t, i) => (
+              {highlighted.map((t, i) => (
                 <MatchCard key={t.id} trainer={t} rank={i + 2} />
               ))}
+            </div>
+          )}
+
+          {/* Show-more toggle for matches #4+ */}
+          {additional.length > 0 && (
+            <div className="mt-8">
+              <button
+                type="button"
+                onClick={() => setShowMore((v) => !v)}
+                className="btn-secondary w-full justify-center"
+                aria-expanded={showMore}
+              >
+                {showMore
+                  ? 'Show fewer matches'
+                  : `Show ${additional.length} more match${additional.length === 1 ? '' : 'es'} →`}
+              </button>
+
+              {showMore && (
+                <div className="mt-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Mono>More matches</Mono>
+                    <span className="text-xs text-ink-500">
+                      Ranked by how well they fit your answers
+                    </span>
+                  </div>
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                    {additional.map((t, i) => (
+                      <MatchCard key={t.id} trainer={t} rank={i + 4} />
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

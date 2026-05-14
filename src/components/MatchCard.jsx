@@ -1,10 +1,10 @@
 import Link from 'next/link';
 import ScoreRing from './ScoreRing';
-import PhotoPlaceholder from './PhotoPlaceholder';
 
-// Compact #2/#3 match card on the results page. The Contact CTA deep-links
-// into the trainer's profile, where the mailto: lives (we don't expose emails
-// via /api/match to keep that contract narrow).
+// Compact match card used for the #2/#3 highlighted slots and for the
+// expanded "more matches" grid (#4 onwards). The Contact CTA deep-links into
+// the trainer profile, where the actual mailto: lives — we don't expose
+// emails on the /api/match payload.
 export default function MatchCard({ trainer, rank }) {
   const initials = trainer.name
     .split(' ')
@@ -13,9 +13,10 @@ export default function MatchCard({ trainer, rank }) {
     .join('')
     .toUpperCase();
   const firstName = trainer.name.split(' ')[0];
+  const rankLabel = `No.${String(rank).padStart(2, '0')}`;
 
   return (
-    <article className="card p-5 sm:p-6 flex flex-col gap-4">
+    <article className="card p-5 sm:p-6 flex flex-col gap-4 h-full">
       <div className="flex items-start gap-4">
         <div className="w-14 h-14 rounded-full overflow-hidden bg-brand-50 grid place-items-center shrink-0">
           {trainer.photoUrl ? (
@@ -27,7 +28,7 @@ export default function MatchCard({ trainer, rank }) {
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className="mono-meta">No.0{rank}</span>
+            <span className="mono-meta">{rankLabel}</span>
             {trainer.featured && <span className="pill-lime">● Featured</span>}
           </div>
           <h3 className="font-display text-lg font-semibold text-ink-900 mt-1 truncate">

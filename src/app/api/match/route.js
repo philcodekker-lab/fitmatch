@@ -4,6 +4,8 @@ import { prisma } from '@/lib/db';
 import { decodeProfile } from '@/lib/profile';
 import { rankTrainers } from '@/lib/matching';
 
+export const dynamic = 'force-dynamic';
+
 const schema = z.object({
   goal: z.string(),
   experience: z.string(),
@@ -12,6 +14,8 @@ const schema = z.object({
   location: z.string().optional().default(''),
 });
 
+// Returns up to 10 ranked matches. The UI highlights the top 3 and lets the
+// user expand to see the rest.
 export async function POST(request) {
   const body = await request.json();
   const parsed = schema.safeParse(body);
@@ -23,6 +27,6 @@ export async function POST(request) {
     where: { approved: true },
   });
   const decoded = profiles.map(decodeProfile);
-  const ranked = rankTrainers(decoded, parsed.data, 3);
+  const ranked = rankTrainers(decoded, parsed.data, 10);
   return NextResponse.json({ matches: ranked });
 }
