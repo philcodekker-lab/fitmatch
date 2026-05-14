@@ -12,80 +12,7 @@ import PhotoPlaceholder from '@/components/PhotoPlaceholder';
 
 export const dynamic = 'force-dynamic';
 
-// -----------------------------------------------------------------------------
-// TODO — when we add these to the Prisma schema, replace these stub helpers
-// with real values from the row. See the bottom of the PR brief for the full
-// list of fields to add.
-// -----------------------------------------------------------------------------
-
-// Deterministic stub helpers — derive plausible values from the trainer id so
-// each profile feels distinct without persisting anything to the DB yet.
-function hash(seed) {
-  let h = 0;
-  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) | 0;
-  return Math.abs(h);
-}
-
-function stubResponseHours(t) {
-  return 2 + (hash(t.id) % 8);
-}
-function stubAccepting(t) {
-  return (hash(t.id + 'a') % 7) !== 0;
-}
-function stubCredentials(t) {
-  const pool = [
-    'Level 4 Personal Trainer (CIMSPA)',
-    'Strength &amp; Conditioning (UKSCA)',
-    'Pre / Post-natal certified',
-    'Olympic lifting Level 1',
-    'Sports Massage Level 3',
-    'Nutrition coaching (Precision Nutrition)',
-    'CPR / First Aid certified',
-    'Mobility specialist (FRC)',
-  ];
-  const seed = hash(t.id + 'c');
-  const count = 3 + (seed % 3);
-  return pool.slice(0, count);
-}
-function stubPricing(t) {
-  const base = Math.max(40, t.priceMin || 60);
-  return {
-    single: base,
-    sixPack: Math.round(base * 5.5),
-    twelvePack: Math.round(base * 10),
-    monthlyOnline: Math.round(Math.max(30, base * 0.4)) * 4,
-  };
-}
-function stubWeekly(t) {
-  // 7 day grid Mon-Sun. ~3 work, ~2 rest, ~2 light.
-  const seed = hash(t.id + 'w');
-  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  const intensities = ['high', 'rest', 'mid', 'high', 'mid', 'rest', 'rest'];
-  // shift the rest days a little for variety
-  const offset = seed % 7;
-  return days.map((label, i) => ({
-    label,
-    intensity: intensities[(i + offset) % 7],
-  }));
-}
-function stubLanguages(t) {
-  const pool = ['English', 'Polish', 'Spanish', 'French', 'Mandarin'];
-  const seed = hash(t.id + 'l');
-  const count = 1 + (seed % 2);
-  return pool.slice(0, count);
-}
-function stubGyms(t) {
-  const pool = [
-    'Fitness First, London Bridge',
-    'PureGym, Old Street',
-    'Equinox, St James',
-    'Independent studio (Manchester Northern Quarter)',
-    'Client home (Greater London)',
-  ];
-  const seed = hash(t.id + 'g');
-  return pool.slice(seed % 2, (seed % 2) + 1 + (seed % 2));
-}
-// -----------------------------------------------------------------------------
+// ─── Helpers ───────────────────────────────────────────────────────────────
 
 function buildSocialLinks(t) {
   const out = [];
@@ -143,6 +70,14 @@ function WeeklyGrid({ days }) {
     <div className="grid grid-cols-7 gap-1.5">
       {days.map((d) => {
         const restful = d.intensity === 'rest';
+        const label =
+          d.intensity === 'high'
+            ? 'High'
+            : d.intensity === 'mid'
+              ? 'Mid'
+              : d.intensity === 'low'
+                ? 'Light'
+                : 'Rest';
         return (
           <div
             key={d.label}
@@ -154,13 +89,15 @@ function WeeklyGrid({ days }) {
             }
           >
             <p className="mono-meta">{d.label}</p>
-            <p className="mt-1 capitalize font-medium">{restful ? 'Rest' : d.intensity}</p>
+            <p className="mt-1 font-medium">{label}</p>
           </div>
         );
       })}
     </div>
   );
 }
+
+// ─── Page ──────────────────────────────────────────────────────────────────
 
 export default async function TrainerProfilePage({ params }) {
   const row = await prisma.trainerProfile.findUnique({
@@ -181,13 +118,30 @@ export default async function TrainerProfilePage({ params }) {
   const firstName = t.name.split(' ')[0];
 
   const socials = buildSocialLinks(t);
-  const responseHours = stubResponseHours(t);
-  const accepting = stubAccepting(t);
-  const credentials = stubCredentials(t);
-  const pricing = stubPricing(t);
-  const week = stubWeekly(t);
-  const languages = stubLanguages(t);
-  const gyms = stubGyms(t);
+
+  // Real practice details with sensible fallbacks for trainers who haven't
+  // filled them in yet.
+  const responseHours = t.responseTimeHours || 24;
+  const accepting = t.acceptingClients !== false; // defaults to true
+  const credentials = Array.isArray(t.credentials) ? t.credentials : [];
+  const tiers = t.pricingTiers || {};
+  const week = Array.isArray(t.weeklySchedule) && t.weeklySchedule.length === 7
+    ? t.weeklySchedule
+    : null;
+  const languages = Array.isArray(t.languages) && t.languages.length > 0
+    ? t.languages
+    : ['English'];
+  const gyms = Array.isArray(t.gymLocations) ? t.gymLocations : [];
+
+  // For the pricing table: derive a sensible "From" headline price and only
+  // show populated rows.
+  const pricingRows = [
+    { key: 'single', label: 'Single session', value: tiers.single || 0 },
+    { key: 'sixPack', label: '6-pack', value: tiers.sixPack || 0 },
+    { key: 'twelvePack', label: '12-pack', value: tiers.twelvePack || 0 },
+    { key: 'monthlyOnline', label: 'Online / month', value: tiers.monthlyOnline || 0 },
+  ].filter((r) => r.value > 0);
+  const headlinePrice = tiers.single || t.priceMin || 0;
 
   const subject = encodeURIComponent(`PT enquiry from FindMyPT — ${t.name}`);
   const body = encodeURIComponent(
@@ -237,7 +191,7 @@ export default async function TrainerProfilePage({ params }) {
             <div>
               <dt className="mono-meta">From</dt>
               <dd className="text-ink-900 mt-1 text-base font-medium">
-                £{t.priceMin}/session
+                {headlinePrice > 0 ? `£${headlinePrice}/session` : '—'}
               </dd>
             </div>
             <div>
@@ -354,15 +308,17 @@ export default async function TrainerProfilePage({ params }) {
             </div>
           )}
 
-          <div className="card p-6 sm:p-8">
-            <Mono>A typical week</Mono>
-            <p className="text-ink-700 mt-2 text-sm">
-              Sessions {t.name.split(' ')[0]} typically schedules with clients.
-            </p>
-            <div className="mt-5">
-              <WeeklyGrid days={week} />
+          {week && (
+            <div className="card p-6 sm:p-8">
+              <Mono>A typical week</Mono>
+              <p className="text-ink-700 mt-2 text-sm">
+                Sessions {firstName} typically schedules with clients.
+              </p>
+              <div className="mt-5">
+                <WeeklyGrid days={week} />
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Right column (sticky) */}
@@ -373,30 +329,22 @@ export default async function TrainerProfilePage({ params }) {
               {accepting && <span className="pill-lime">● Accepting new</span>}
             </div>
             <p className="mt-2 font-display text-4xl text-ink-900">
-              From £{pricing.single}
+              {headlinePrice > 0 ? `From £${headlinePrice}` : 'On request'}
             </p>
             <p className="mono-meta mt-1">Per session</p>
 
-            <table className="w-full mt-5 text-sm">
-              <tbody>
-                <tr className="border-t border-line2">
-                  <td className="py-2.5 text-ink-700">Single session</td>
-                  <td className="py-2.5 text-right font-medium">£{pricing.single}</td>
-                </tr>
-                <tr className="border-t border-line2">
-                  <td className="py-2.5 text-ink-700">6-pack</td>
-                  <td className="py-2.5 text-right font-medium">£{pricing.sixPack}</td>
-                </tr>
-                <tr className="border-t border-line2">
-                  <td className="py-2.5 text-ink-700">12-pack</td>
-                  <td className="py-2.5 text-right font-medium">£{pricing.twelvePack}</td>
-                </tr>
-                <tr className="border-t border-line2">
-                  <td className="py-2.5 text-ink-700">Online / month</td>
-                  <td className="py-2.5 text-right font-medium">£{pricing.monthlyOnline}</td>
-                </tr>
-              </tbody>
-            </table>
+            {pricingRows.length > 0 && (
+              <table className="w-full mt-5 text-sm">
+                <tbody>
+                  {pricingRows.map((row) => (
+                    <tr key={row.key} className="border-t border-line2">
+                      <td className="py-2.5 text-ink-700">{row.label}</td>
+                      <td className="py-2.5 text-right font-medium">£{row.value}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
 
             <a href={mailto} className="btn-primary w-full justify-center mt-5">
               Contact {firstName}
@@ -415,17 +363,19 @@ export default async function TrainerProfilePage({ params }) {
             </div>
           )}
 
-          <div className="card p-6">
-            <Mono>Credentials</Mono>
-            <ul className="mt-3 space-y-2 text-sm text-ink-900">
-              {credentials.map((line) => (
-                <li key={line} className="flex items-start gap-2">
-                  <span className="text-brand-600 mt-0.5">✓</span>
-                  <span dangerouslySetInnerHTML={{ __html: line }} />
-                </li>
-              ))}
-            </ul>
-          </div>
+          {credentials.length > 0 && (
+            <div className="card p-6">
+              <Mono>Credentials</Mono>
+              <ul className="mt-3 space-y-2 text-sm text-ink-900">
+                {credentials.map((line) => (
+                  <li key={line} className="flex items-start gap-2">
+                    <span className="text-brand-600 mt-0.5">✓</span>
+                    <span>{line}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <div className="card p-6">
             <Mono>Works with</Mono>
@@ -448,12 +398,14 @@ export default async function TrainerProfilePage({ params }) {
                   {languages.join(', ')}
                 </dd>
               </div>
-              <div className="flex items-start justify-between gap-4 border-t border-line2 py-2.5">
-                <dt className="text-ink-500">Gyms</dt>
-                <dd className="text-right text-ink-900 font-medium">
-                  {gyms.join(', ')}
-                </dd>
-              </div>
+              {gyms.length > 0 && (
+                <div className="flex items-start justify-between gap-4 border-t border-line2 py-2.5">
+                  <dt className="text-ink-500">Gyms</dt>
+                  <dd className="text-right text-ink-900 font-medium">
+                    {gyms.join(', ')}
+                  </dd>
+                </div>
+              )}
             </dl>
           </div>
         </aside>

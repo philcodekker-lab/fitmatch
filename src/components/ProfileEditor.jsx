@@ -10,6 +10,8 @@ import {
   EXPERIENCE_LEVELS,
 } from '@/lib/constants';
 
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
 async function uploadFile(file) {
   const fd = new FormData();
   fd.append('file', file);
@@ -27,6 +29,40 @@ function initialsOf(name) {
     .join('')
     .toUpperCase();
 }
+
+function linesToArray(text) {
+  return (text || '')
+    .split('\n')
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+function arrayToLines(arr) {
+  return (arr || []).join('\n');
+}
+function csvToArray(text) {
+  return (text || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+function arrayToCsv(arr) {
+  return (arr || []).join(', ');
+}
+
+const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const INTENSITY_OPTIONS = [
+  { id: 'high', label: 'High intensity' },
+  { id: 'mid', label: 'Mid intensity' },
+  { id: 'low', label: 'Light / recovery' },
+  { id: 'rest', label: 'Rest day' },
+];
+
+function withDefaultWeek(week) {
+  if (Array.isArray(week) && week.length === 7) return week;
+  return DAYS.map((label) => ({ label, intensity: 'rest' }));
+}
+
+// ─── Reusable bits ──────────────────────────────────────────────────────────
 
 function MultiSelect({ value, onChange, options, getLabel }) {
   function toggle(id) {
@@ -51,6 +87,38 @@ function MultiSelect({ value, onChange, options, getLabel }) {
         );
       })}
     </div>
+  );
+}
+
+function Toggle({ value, onChange, label, description }) {
+  return (
+    <label className="flex items-start gap-3 cursor-pointer select-none">
+      <span
+        className={
+          'mt-0.5 inline-flex w-11 h-6 rounded-full transition-colors shrink-0 relative ' +
+          (value ? 'bg-brand-600' : 'bg-line')
+        }
+      >
+        <input
+          type="checkbox"
+          className="sr-only"
+          checked={value}
+          onChange={(e) => onChange(e.target.checked)}
+        />
+        <span
+          className={
+            'absolute top-0.5 w-5 h-5 rounded-full bg-surface shadow transition-all ' +
+            (value ? 'left-[22px]' : 'left-0.5')
+          }
+        />
+      </span>
+      <span>
+        <span className="block text-sm font-medium text-ink-900">{label}</span>
+        {description && (
+          <span className="block text-xs text-ink-500 mt-0.5">{description}</span>
+        )}
+      </span>
+    </label>
   );
 }
 
@@ -217,8 +285,11 @@ function SocialField({ label, prefix, value, onChange, placeholder, type = 'text
   );
 }
 
+// ─── Main component ─────────────────────────────────────────────────────────
+
 export default function ProfileEditor({ initial }) {
   const router = useRouter();
+
   const [form, setForm] = useState({
     name: initial.name ?? '',
     bio: initial.bio ?? '',
@@ -236,20 +307,63 @@ export default function ProfileEditor({ initial }) {
     socialFacebook: initial.socialFacebook ?? '',
     socialWebsite: initial.socialWebsite ?? '',
     caseStudyMedia: initial.caseStudyMedia ?? [],
+
+    // Practice details (Phase 2)
+    responseTimeHours: initial.responseTimeHours ?? 24,
+    acceptingClients: initial.acceptingClients ?? true,
+    credentials: initial.credentials ?? [],
+    pricingTiers: {
+      single: initial.pricingTiers?.single ?? 0,
+      sixPack: initial.pricingTiers?.sixPack ?? 0,
+      twelvePack: initial.pricingTiers?.twelvePack ?? 0,
+      monthlyOnline: initial.pricingTiers?.monthlyOnline ?? 0,
+    },
+    weeklySchedule: withDefaultWeek(initial.weeklySchedule),
+    languages: initial.languages ?? [],
+    gymLocations: initial.gymLocations ?? [],
   });
+
+  // Local-only text representations so the textareas can be edited freely
+  // without re-parsing on every keystroke.
+  const [credentialsText, setCredentialsText] = useState(arrayToLines(form.credentials));
+  const [gymsText, setGymsText] = useState(arrayToLines(form.gymLocations));
+  const [languagesText, setLanguagesText] = useState(arrayToCsv(form.languages));
+
   const [status, setStatus] = useState({ kind: 'idle', message: '' });
 
   function set(field) {
     return (val) => setForm((f) => ({ ...f, [field]: val }));
   }
 
+  function setTier(key, value) {
+    setForm((f) => ({
+      ...f,
+      pricingTiers: { ...f.pricingTiers, [key]: Number(value) || 0 },
+    }));
+  }
+
+  function setDayIntensity(idx, intensity) {
+    setForm((f) => {
+      const next = f.weeklySchedule.map((d, i) =>
+        i === idx ? { ...d, intensity } : d,
+      );
+      return { ...f, weeklySchedule: next };
+    });
+  }
+
   async function save(e) {
     e.preventDefault();
     setStatus({ kind: 'saving', message: '' });
+    const payload = {
+      ...form,
+      credentials: linesToArray(credentialsText),
+      gymLocations: linesToArray(gymsText),
+      languages: csvToArray(languagesText),
+    };
     const res = await fetch('/api/pt/profile', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
+      body: JSON.stringify(payload),
     });
     const data = await res.json();
     if (!res.ok) {
@@ -257,6 +371,13 @@ export default function ProfileEditor({ initial }) {
       return;
     }
     setStatus({ kind: 'saved', message: 'Saved.' });
+    // Keep the in-memory form in sync with the parsed arrays
+    setForm((f) => ({
+      ...f,
+      credentials: linesToArray(credentialsText),
+      gymLocations: linesToArray(gymsText),
+      languages: csvToArray(languagesText),
+    }));
     router.refresh();
   }
 
@@ -268,6 +389,7 @@ export default function ProfileEditor({ initial }) {
 
   return (
     <form onSubmit={save} className="space-y-6">
+      {/* Identity */}
       <div className="card p-6 sm:p-8 grid gap-6">
         <Mono>Identity</Mono>
         <div>
@@ -294,7 +416,7 @@ export default function ProfileEditor({ initial }) {
           />
         </div>
         <div>
-          <label className="label">Case studies</label>
+          <label className="label">Case studies (free text)</label>
           <textarea
             className="input min-h-[120px]"
             placeholder="A few results, transformations, or the kinds of clients you've worked with."
@@ -318,6 +440,7 @@ export default function ProfileEditor({ initial }) {
         </div>
       </div>
 
+      {/* What you do */}
       <div className="card p-6 sm:p-8 grid gap-5">
         <Mono>What you do</Mono>
         <div>
@@ -347,6 +470,147 @@ export default function ProfileEditor({ initial }) {
         </div>
       </div>
 
+      {/* Practice details */}
+      <div className="card p-6 sm:p-8 grid gap-5">
+        <Mono>Practice details</Mono>
+        <p className="text-sm text-ink-500 -mt-3">
+          These power the public profile sidebar (replies, accepting-new badge, credentials, languages, gyms).
+        </p>
+
+        <Toggle
+          value={form.acceptingClients}
+          onChange={set('acceptingClients')}
+          label="Currently accepting new clients"
+          description='Shows the green "Accepting new" badge on your profile and matches.'
+        />
+
+        <div>
+          <label className="label">Typical reply time (hours)</label>
+          <input
+            type="number"
+            className="input max-w-[160px]"
+            min={1}
+            max={168}
+            value={form.responseTimeHours}
+            onChange={(e) => set('responseTimeHours')(Number(e.target.value) || 24)}
+          />
+          <p className="text-xs text-ink-500 mt-1">
+            Shown as &ldquo;Replies within ~{form.responseTimeHours}h&rdquo; on your profile.
+          </p>
+        </div>
+
+        <div>
+          <label className="label">Languages</label>
+          <input
+            type="text"
+            className="input"
+            placeholder="English, Polish, Spanish"
+            value={languagesText}
+            onChange={(e) => setLanguagesText(e.target.value)}
+          />
+          <p className="text-xs text-ink-500 mt-1">Comma-separated.</p>
+        </div>
+
+        <div>
+          <label className="label">Where you train</label>
+          <textarea
+            className="input min-h-[80px]"
+            placeholder={'Fitness First, London Bridge\nIndependent studio (Brixton)\nClient home (Greater London)'}
+            value={gymsText}
+            onChange={(e) => setGymsText(e.target.value)}
+          />
+          <p className="text-xs text-ink-500 mt-1">One location per line.</p>
+        </div>
+
+        <div>
+          <label className="label">Credentials</label>
+          <textarea
+            className="input min-h-[100px]"
+            placeholder={'Level 4 Personal Trainer (CIMSPA)\nPre / post-natal certified\nSports Massage Level 3'}
+            value={credentialsText}
+            onChange={(e) => setCredentialsText(e.target.value)}
+          />
+          <p className="text-xs text-ink-500 mt-1">One credential per line. 3–6 works well.</p>
+        </div>
+      </div>
+
+      {/* Pricing breakdown */}
+      <div className="card p-6 sm:p-8 grid gap-5">
+        <Mono>Pricing breakdown</Mono>
+        <p className="text-sm text-ink-500 -mt-3">
+          What each package costs in £. Leave at 0 to hide a row from the public pricing card.
+        </p>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label className="label">Single session</label>
+            <input
+              type="number"
+              className="input"
+              min={0}
+              value={form.pricingTiers.single}
+              onChange={(e) => setTier('single', e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="label">6-pack</label>
+            <input
+              type="number"
+              className="input"
+              min={0}
+              value={form.pricingTiers.sixPack}
+              onChange={(e) => setTier('sixPack', e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="label">12-pack</label>
+            <input
+              type="number"
+              className="input"
+              min={0}
+              value={form.pricingTiers.twelvePack}
+              onChange={(e) => setTier('twelvePack', e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="label">Online / month</label>
+            <input
+              type="number"
+              className="input"
+              min={0}
+              value={form.pricingTiers.monthlyOnline}
+              onChange={(e) => setTier('monthlyOnline', e.target.value)}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Weekly schedule */}
+      <div className="card p-6 sm:p-8 grid gap-5">
+        <Mono>A typical week</Mono>
+        <p className="text-sm text-ink-500 -mt-3">
+          How a normal week of yours looks. Surfaces as a 7-day strip on your public profile.
+        </p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
+          {form.weeklySchedule.map((d, i) => (
+            <div key={d.label} className="rounded-xl border border-line p-3 bg-surface">
+              <p className="mono-meta">{d.label}</p>
+              <select
+                className="mt-2 w-full text-sm py-1.5 px-2 rounded-lg border border-line bg-surface focus:outline-none focus:border-ink-700 focus:ring-2 focus:ring-ink-900/10"
+                value={d.intensity}
+                onChange={(e) => setDayIntensity(i, e.target.value)}
+              >
+                {INTENSITY_OPTIONS.map((opt) => (
+                  <option key={opt.id} value={opt.id}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Socials */}
       <div className="card p-6 sm:p-8 grid gap-5">
         <Mono>Social links</Mono>
         <p className="text-sm text-ink-500 -mt-3">
@@ -384,8 +648,9 @@ export default function ProfileEditor({ initial }) {
         </div>
       </div>
 
+      {/* Pricing range + location */}
       <div className="card p-6 sm:p-8 grid sm:grid-cols-3 gap-4">
-        <div className="sm:col-span-3"><Mono>Pricing &amp; location</Mono></div>
+        <div className="sm:col-span-3"><Mono>Matching info</Mono></div>
         <div>
           <label className="label">Price min (£/session)</label>
           <input
@@ -416,6 +681,10 @@ export default function ProfileEditor({ initial }) {
             onChange={(e) => set('location')(e.target.value)}
           />
         </div>
+        <p className="sm:col-span-3 text-xs text-ink-500 -mt-2">
+          These two numbers control where you appear in matches by budget. The detailed
+          pricing breakdown above is what we display on your profile.
+        </p>
       </div>
 
       <div className="flex items-center justify-between">

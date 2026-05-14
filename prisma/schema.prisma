@@ -1,13 +1,8 @@
 // Prisma schema for the PT Marketplace MVP.
 //
-// Postgres is the default — works on Vercel + any hosted Postgres
-// (Neon, Supabase, Railway, RDS, etc.). For purely-local development you
-// can either point DATABASE_URL at a local Postgres instance or temporarily
-// flip `provider` back to "sqlite" with a `file:./dev.db` URL.
-//
-// Enum-like fields (role, specialisms, training styles, experience levels)
-// are stored as strings with allowed values enforced in application code
-// (see src/lib/constants.js) so the schema stays portable across providers.
+// Postgres is the default. SQLite has no native enum support, so enum-like
+// fields and arrays are stored as JSON-encoded strings — the helpers in
+// src/lib/profile.js decode them on the way out.
 
 generator client {
   provider = "prisma-client-js"
@@ -35,29 +30,34 @@ model TrainerProfile {
 
   name         String
   bio          String   @default("")
-  caseStudies  String   @default("") // free-text for MVP
+  caseStudies  String   @default("")
   currentOffer String   @default("")
 
-  // Specialisms / preferences are stored as JSON-encoded string arrays so we
-  // can keep the schema flat on SQLite. Use the helpers in src/lib/profile.js
-  // to read/write these.
-  specialisms      String @default("[]") // e.g. ["fat_loss","strength"]
-  trainingStyles   String @default("[]") // ["online","in_person","hybrid"]
-  experienceLevels String @default("[]") // ["beginner","intermediate","advanced"]
+  specialisms      String @default("[]")
+  trainingStyles   String @default("[]")
+  experienceLevels String @default("[]")
 
-  // Pricing is per-session in GBP for the MVP.
   priceMin     Int      @default(0)
   priceMax     Int      @default(0)
 
-  location     String   @default("")    // free-text city for MVP
+  location     String   @default("")
 
-  // --- Media + social fields (Feature pack v2) ---------------------------
-  photoUrl         String?  // Profile photo, hosted on Vercel Blob
-  socialInstagram  String   @default("") // handle, e.g. "fitwithlena"
-  socialTiktok     String   @default("") // handle, e.g. "fitwithlena"
-  socialFacebook   String   @default("") // full URL
-  socialWebsite    String   @default("") // full URL
-  caseStudyMedia   String   @default("[]") // JSON array of image URLs
+  // Media + socials
+  photoUrl         String?
+  socialInstagram  String   @default("")
+  socialTiktok     String   @default("")
+  socialFacebook   String   @default("")
+  socialWebsite    String   @default("")
+  caseStudyMedia   String   @default("[]")
+
+  // Practice details (Phase 2 — promoted from UI stubs)
+  responseTimeHours Int     @default(24)
+  acceptingClients  Boolean @default(true)
+  credentials       String  @default("[]")   // JSON array of strings
+  pricingTiers      String  @default("{}")   // JSON {single, sixPack, twelvePack, monthlyOnline}
+  weeklySchedule    String  @default("[]")   // JSON array of {label, intensity}
+  languages         String  @default("[]")   // JSON array of strings
+  gymLocations      String  @default("[]")   // JSON array of strings
 
   approved     Boolean  @default(false)
   featured     Boolean  @default(false)

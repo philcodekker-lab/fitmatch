@@ -1,33 +1,53 @@
-// Helpers for reading/writing the JSON-encoded array fields on TrainerProfile.
+// Helpers for reading/writing the JSON-encoded fields on TrainerProfile.
+//
+// SQLite has no native array/JSON type, so we keep things portable by storing
+// arrays and objects as JSON strings and decoding on the way out.
 
-function parseList(value) {
-  if (!value) return [];
+function parseJson(value, fallback) {
+  if (!value) return fallback;
   try {
     const parsed = JSON.parse(value);
-    return Array.isArray(parsed) ? parsed : [];
+    return parsed ?? fallback;
   } catch {
-    return [];
+    return fallback;
   }
 }
 
+const ARRAY_FIELDS = [
+  'specialisms',
+  'trainingStyles',
+  'experienceLevels',
+  'caseStudyMedia',
+  'credentials',
+  'weeklySchedule',
+  'languages',
+  'gymLocations',
+];
+
+const OBJECT_FIELDS = ['pricingTiers'];
+
 export function decodeProfile(profile) {
   if (!profile) return null;
-  return {
-    ...profile,
-    specialisms: parseList(profile.specialisms),
-    trainingStyles: parseList(profile.trainingStyles),
-    experienceLevels: parseList(profile.experienceLevels),
-    caseStudyMedia: parseList(profile.caseStudyMedia),
-  };
+  const out = { ...profile };
+  for (const f of ARRAY_FIELDS) {
+    out[f] = parseJson(profile[f], []);
+  }
+  for (const f of OBJECT_FIELDS) {
+    out[f] = parseJson(profile[f], {});
+  }
+  return out;
 }
 
 export function encodeListFields(input) {
   const out = { ...input };
-  if (Array.isArray(input.specialisms)) out.specialisms = JSON.stringify(input.specialisms);
-  if (Array.isArray(input.trainingStyles)) out.trainingStyles = JSON.stringify(input.trainingStyles);
-  if (Array.isArray(input.experienceLevels))
-    out.experienceLevels = JSON.stringify(input.experienceLevels);
-  if (Array.isArray(input.caseStudyMedia))
-    out.caseStudyMedia = JSON.stringify(input.caseStudyMedia);
+  for (const f of ARRAY_FIELDS) {
+    if (Array.isArray(input[f])) out[f] = JSON.stringify(input[f]);
+  }
+  for (const f of OBJECT_FIELDS) {
+    const v = input[f];
+    if (v && typeof v === 'object' && !Array.isArray(v)) {
+      out[f] = JSON.stringify(v);
+    }
+  }
   return out;
 }

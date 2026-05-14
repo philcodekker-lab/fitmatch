@@ -6,13 +6,26 @@ import { encodeListFields, decodeProfile } from '@/lib/profile';
 
 export const dynamic = 'force-dynamic';
 
-// Accepts either a full URL string or an empty string ("" = remove the photo).
 const optionalUrlOrEmpty = z
   .string()
   .max(2000)
   .refine((v) => v === '' || /^https?:\/\//.test(v), {
     message: 'Must be a URL or empty.',
   });
+
+const pricingTiersSchema = z
+  .object({
+    single: z.coerce.number().int().min(0).max(2000).default(0),
+    sixPack: z.coerce.number().int().min(0).max(20000).default(0),
+    twelvePack: z.coerce.number().int().min(0).max(40000).default(0),
+    monthlyOnline: z.coerce.number().int().min(0).max(5000).default(0),
+  })
+  .default({});
+
+const weeklyDaySchema = z.object({
+  label: z.string().max(10),
+  intensity: z.enum(['high', 'mid', 'low', 'rest']),
+});
 
 const schema = z.object({
   name: z.string().min(2).max(80),
@@ -26,7 +39,7 @@ const schema = z.object({
   priceMax: z.coerce.number().int().min(0).max(1000).default(0),
   location: z.string().max(120).default(''),
 
-  // Media + socials (all optional)
+  // Media + socials
   photoUrl: optionalUrlOrEmpty.optional().default(''),
   socialInstagram: z.string().max(80).default(''),
   socialTiktok: z.string().max(80).default(''),
@@ -36,6 +49,15 @@ const schema = z.object({
     .array(z.string().url())
     .max(10, { message: 'Maximum 10 case-study photos.' })
     .default([]),
+
+  // Practice details (Phase 2)
+  responseTimeHours: z.coerce.number().int().min(1).max(168).default(24),
+  acceptingClients: z.boolean().default(true),
+  credentials: z.array(z.string().max(200)).max(10).default([]),
+  pricingTiers: pricingTiersSchema,
+  weeklySchedule: z.array(weeklyDaySchema).max(7).default([]),
+  languages: z.array(z.string().max(50)).max(10).default([]),
+  gymLocations: z.array(z.string().max(200)).max(10).default([]),
 });
 
 export async function GET() {
@@ -58,7 +80,6 @@ export async function PUT(request) {
   }
 
   const data = encodeListFields(parsed.data);
-  // Normalize empty string → null so the DB column is properly nullable.
   if (data.photoUrl === '') data.photoUrl = null;
 
   const profile = await prisma.trainerProfile.update({
